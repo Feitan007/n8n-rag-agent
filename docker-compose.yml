@@ -1,40 +1,32 @@
 version: '3.8'
 
 services:
-  # 1. Este é o nosso novo banco de dados PostgreSQL.
-  # A Evolution API vai conseguir encontrá-lo pelo nome "postgres".
+  # Este serviço se chama 'postgres'. A API vai conseguir encontrá-lo por este nome.
   postgres:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: evolution_user
-      POSTGRES_PASSWORD: evolution_password
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: your_strong_password_here
       POSTGRES_DB: evolution_db
     volumes:
-      # Isso garante que os dados do banco não sejam perdidos nos deploys
       - postgres_data:/var/lib/postgresql/data
 
-  # 2. Esta é a nossa Evolution API, agora configurada para falar com o banco acima.
-  evolution-api:
+  # Nosso serviço da Evolution API
+  api:
     image: atendai/evolution-api:v2.2.3
     restart: always
     ports:
-      # Expõe a porta para acessarmos a API pela URL do Railway
-      - "8080:8080"
+      - "8080:8080" # Expõe a porta para acessarmos a API
     environment:
-      # A URL agora aponta para o serviço 'postgres' que criamos acima
-      DATABASE_URL: "postgresql://evolution_user:evolution_password@postgres:5432/evolution_db"
-      DATABASE_PROVIDER: postgresql
-      DATABASE_ENABLED: "true"
+      # Esta URL agora aponta para o serviço 'postgres' acima. Vai funcionar.
+      DATABASE_URL: "postgresql://evolution:your_strong_password_here@postgres:5432/evolution_db"
       
-      # Nossa chave de API para acessar a Evolution
+      # Chaves e configurações da API
       AUTHENTICATION_API_KEY: "agente24h-key"
-      
-      # Correção para o QR Code do WhatsApp
       CONFIG_SESSION_PHONE_VERSION: "2.3000.1023204200"
     depends_on:
-      # Garante que o banco de dados inicie antes da API
-      - postgres
+      - postgres # Garante que o banco de dados inicie antes da API
 
 volumes:
   postgres_data:
