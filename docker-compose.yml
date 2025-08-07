@@ -1,39 +1,40 @@
 version: '3.8'
 
 services:
-  # Serviço da Evolution API
+  # 1. Este é o nosso novo banco de dados PostgreSQL.
+  # A Evolution API vai conseguir encontrá-lo pelo nome "postgres".
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: evolution_user
+      POSTGRES_PASSWORD: evolution_password
+      POSTGRES_DB: evolution_db
+    volumes:
+      # Isso garante que os dados do banco não sejam perdidos nos deploys
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Esta é a nossa Evolution API, agora configurada para falar com o banco acima.
   evolution-api:
     image: atendai/evolution-api:v2.2.3
     restart: always
+    ports:
+      # Expõe a porta para acessarmos a API pela URL do Railway
+      - "8080:8080"
     environment:
-      # Conecta ao banco de dados do Railway
-      DATABASE_URL: ${DATABASE_URL}
+      # A URL agora aponta para o serviço 'postgres' que criamos acima
+      DATABASE_URL: "postgresql://evolution_user:evolution_password@postgres:5432/evolution_db"
       DATABASE_PROVIDER: postgresql
       DATABASE_ENABLED: "true"
       
-      # Chave de API para acessar a Evolution
+      # Nossa chave de API para acessar a Evolution
       AUTHENTICATION_API_KEY: "agente24h-key"
       
       # Correção para o QR Code do WhatsApp
       CONFIG_SESSION_PHONE_VERSION: "2.3000.1023204200"
-
-  # Serviço do N8N
-  n8n:
-    image: n8nio/n8n
-    restart: always
-    ports:
-      - "5678:5678"
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=false
-      # Esta variável faz o N8N usar o mesmo banco da Evolution API
-      - DB_TYPE=postgres
-      - DB_POSTGRESDB_HOST=${PGHOST}
-      - DB_POSTGRESDB_PORT=${PGPORT}
-      - DB_POSTGRESDB_DATABASE=${PGDATABASE}
-      - DB_POSTGRESDB_USER=${PGUSER}
-      - DB_POSTGRESDB_PASSWORD=${PGPASSWORD}
-      - N8N_HOST=${RAILWAY_PUBLIC_DOMAIN}
-      - WEBHOOK_URL=https://n8n-rag-agent.up.railway.app/
+    depends_on:
+      # Garante que o banco de dados inicie antes da API
+      - postgres
 
 volumes:
-  n8n_data:
+  postgres_data:
