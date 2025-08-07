@@ -13,5 +13,14 @@ services:
       - n8n_data:/home/node/.n8n
     restart: always
 
+  evolution-api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:KcGuOueOxdEYgIobUVLxtXDaOpmtKgYi@switchback.proxy.rlwy.net:42262/railway"
+      DATABASE_PROVIDER: postgresql
+    restart: always
+
 volumes:
   n8n_data:
